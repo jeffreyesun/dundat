@@ -1,5 +1,5 @@
 # dundat
-A text-based adventure game
+A text-based adventure game.
 
 This isn't hosted anywhere at the moment, but here's what you should imagine when you play! Picture this:
 Someone sends you a link, says "This is cool stuff, Andy!" (That's right. I know your name, Andrew.)
