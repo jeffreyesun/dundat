@@ -1,10 +1,12 @@
-pos = 19
-path = []
-inv = ['pen','microphone']
-noun=[]
-winconditions='notmet'
-splitentry=[]
-verb=''
+#This is a whole lot of spaghetti, and I apologize to anyone trying to figure out how it works, which is probably going to be myself in the future. The basic deal is that your character can be in one of many numbered locations, stored as "shared.pos".
+
+#The game runs by iterating the step() function until the win conditions are met.
+
+#Each command the user types is split by parse() into a "verb" and an optional "noun. Each verb has a corresponding function, and each noun has a corresponding object. So typing "examine poster", for example, sets noun=poster, and calls climb().
+
+#The verbs are all defined in the main files because python doesn't allow imported functions to access the global variables of the parent module. Don't do this! Set up a shared namespace at the get-go!
+
+#import some data
 from generators import question
 from generators import poster
 from generators import prop
@@ -16,9 +18,24 @@ descriptions=objects("descriptions")
 intros=objects("intros")
 nouns=objects("nouns")
 mapp=objects("map")
+
+#set locations as traversable or untraversable
 traversable=['24out','20door','18door','11house','8bar','4cw','5cw','6cw','7cw','4ws','5ws','6ws','7ws','3stairs','4stairs','6stairs','8w','8east','8south','9north','9south','9east','9west','10east','10west','10south','11west','11south','11e','12north','13north','14north','15out','16.1door','17out','17door','18cw','18ws','19out','24out','20cw','21cw','21ws','22cw','22ws','23ws','20w','23booth']
 untraversable=['8n','10n','11n','12e','12s','12w','13e','13s','13w','14s','14e','14w','20ws','23cw','23w','19w','19n','19s','21w']
 
+
+pos = 1			#start on square 1
+path = []		#records where you've been
+inv = []		#inventory
+noun=[]			#current noun
+winconditions='notmet'	#you still have some work to do
+splitentry=[]		#the user input, split into words
+verb=''			#current verb
+
+
+#########################
+#Verbs Begin, Forgive Me#
+#########################
 
 def help():
 	print('''	Though this game is designed to understand whatever you might want to do, sometimes an action will be too... eccentric, or worded in a way that confuses us.
@@ -41,7 +58,7 @@ def help():
 	go
 	wake up
 	map (Displays a high-res map of your location, with an x marking you current position)
-	Everything can be accomplished with these verbs, and whatever nouns are lying around. Good luck!"''')
+	Everything can be accomplished with these verbs, and whatever nouns you might find lying around. Good luck!"''')
 
 def plug():
 	global noun
@@ -181,7 +198,7 @@ def talk():
 	global spaced
 	global path
 	global inv
-	if pos<8:#prebay
+	if pos<8:#before the Pirate Bay
 		if noun == "5man":
 			if '5man' in path: print("\t"+dialogues['5man2'])
 			else:
@@ -445,7 +462,7 @@ def go():
 	global spaced
 	global inv
 	global descriptions
-	if pos<8:#prebay
+	if pos<8:#before the Pirate Bay
 		if noun=="1.2table": pos=1.3
 		elif noun=="1.3table":
 			print("\tYou climb down from the table")
@@ -553,6 +570,12 @@ def go():
 	elif noun == '24out':pos=23
 	else: print("\t I don't understand where you're trying to go.")
 
+###########
+#Verbs End#
+###########
+
+
+#Parses user input
 def parse():
 	global verb
 	global noun
@@ -562,11 +585,11 @@ def parse():
 	global traversable
 	global untraversable
 	global inv
-	noun = "blargh"
-	entry=raw_input(">>")
+	noun = "unrecognized"		#This is changed iff an entered noun is recognized
+	entry=raw_input(">>")		#The text prompt
 	splitentry=entry.split()
 	if splitentry==[]:splitentry=['emptystr']
-	if splitentry[0]=="nikolaisgreat":
+	if splitentry[0]=="nikolaisgreat":	#Cheat code for my friend Nikola
 		pos=8
 		inv.append("scissors")
 		inv.append("pen")
@@ -593,9 +616,9 @@ def parse():
 			splitentry.pop(1)
 			splitentry[0]='lookaround'
 		elif splitentry[1] in ['at','over']:
-			if noun != "blargh": splitentry[0]='examine'
+			if noun != "unrecognized": splitentry[0]='examine'
 			else: splitentry[0]='whatdear'
-		elif noun != "blargh": splitentry[0]='examine'
+		elif noun != "unrecognized": splitentry[0]='examine'
 		else: splitentry=['nonsense']
 	if splitentry[0] not in verbs: splitentry=["nonsense"]
 	verb=verbs[splitentry[0]]
@@ -606,10 +629,10 @@ def parse():
 	if pos == 2:
 		if verb not in [open,inventory,nonsense,emptystr,use,help,map]: verb = plummet#use
 	if verb in transitive:
-		if noun=="blargh": verb=nonsense
+		if noun=="unrecognized": verb=nonsense
 
-if True:	
-	verbs = {
+	
+verbs = {				#Maps commands to functions
 	'lookaround':lookaround,
 	'nonsense':	nonsense,
 	'examine':	examine,
@@ -657,28 +680,35 @@ if True:
 	'm':		map,
 	'map':		map,
 	'sit':		sit
-	}
+}
 
-	transitive=[examine,open,cut,talk,take]#fold omitted because of hat problem move omitted because synonym open
+#Verbs that need objects
+transitive=[examine,open,cut,talk,take]
 
-	
+#This gets called until you win
 def step():
 	global spaced
 	global pos
 	global path
 	global verb
 	global noun
-	spaced = 0
+	spaced = 0				#this gets set to 1 if the user only entered spaces
 	path.append(pos)
 	poscache=pos
 	parse()
 	if verb != emptystr:
 		print("\n")
 	verb()
-	if poscache != pos:
-		if spaced == 1: print("\n")
-		if pos in path: lookaround()
-		else: intro()
+	if poscache != pos:			#if you've moved
+		if spaced == 1: print("\n")	
+		if pos in path: lookaround()	#if you've been here before, give a short description
+		else: intro()			#if you're in a new place, give a longer description
+
+
+
+######################
+#The game starts here#
+######################
 
 
 
@@ -687,11 +717,12 @@ blahblah=raw_input(">>")
 print "\n\tNo sooner do you type these words than the room surrounding you begins to come out of focus. The screen of your monitor seems to grow. Instinctively, you lean back as you feel it draw closer. There is a brilliant FLASH!\n\n\tYou are in a mostly empty room."
 
 
-
+#Iterates until you win
 while winconditions=='notmet':
 	step();
 
 
+#You win!
 print('''You hand him the microphone. "I have an idea," You say, "Start talking."
 	"About what?" He asks.
 	"About anything."
@@ -709,5 +740,6 @@ print('''You hand him the microphone. "I have an idea," You say, "Start talking.
 
 	You decide to drop some coin in the world domination fund, and go for a walk.''')
 
+#Prevents the script from quitting
 while True:
-	yourmom=raw_input("")
+	foo=raw_input("")
