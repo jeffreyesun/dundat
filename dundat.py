@@ -1,5 +1,7 @@
 #This is a whole lot of spaghetti, and I apologize to anyone trying to figure out how it works, which is probably going to be myself in the future. The basic deal is that your character can be in one of many numbered locations, stored as "shared.pos".
 
+#(This code may be deprecated, but at least it's self-deprecated)
+
 #The game runs by iterating the step() function until the win conditions are met.
 
 #Each command the user types is split by parse() into a "verb" and an optional "noun. Each verb has a corresponding function, and each noun has a corresponding object. So typing "examine poster", for example, sets noun=poster, and calls climb().
